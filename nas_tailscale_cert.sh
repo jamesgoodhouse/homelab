@@ -47,8 +47,6 @@ copy_if_different "$TEMPDIR/$TS_DNS.crt" "$TAILSCALE_CERT_DIR/cert.pem" && CERTI
 copy_if_different "$TEMPDIR/$TS_DNS.crt" "$TAILSCALE_CERT_DIR/fullchain.pem" && CERTIFICATES_UPDATED=1
 copy_if_different "$TEMPDIR/p8file.pem" "$TAILSCALE_CERT_DIR/privkey.pem" && CERTIFICATES_UPDATED=1
 
-rm -rf "$TEMPDIR"
-
 if [ "$CERTIFICATES_UPDATED" -eq 1 ]; then
   echo "Certificates updated"
 

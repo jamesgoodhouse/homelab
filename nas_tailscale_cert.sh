@@ -20,6 +20,13 @@ copy_if_different() {
   fi
 }
 
+restart_services() {
+  echo "Restarting services"
+  /bin/systemctl restart nginx
+  /bin/systemctl restart pkgctl-WebDAVServer
+  echo "Services restarted"
+}
+
 if [ "$EUID" -ne 0 ]; then
   echo "This script must be run as root"
   exit 1
@@ -60,15 +67,13 @@ copy_if_different "$TEMPDIR/$TS_DNS.crt" "$TAILSCALE_CERT_DIR/cert.pem" && CERTI
 copy_if_different "$TEMPDIR/$TS_DNS.crt" "$TAILSCALE_CERT_DIR/fullchain.pem" && CERTIFICATES_UPDATED=1
 copy_if_different "$TEMPDIR/p8file.pem" "$TAILSCALE_CERT_DIR/privkey.pem" && CERTIFICATES_UPDATED=1
 
+if [ "$DEFAULT_CERT_ID" != "$TAILSCALE_CERT_ID" ]; then
+  echo "$TAILSCALE_CERT_ID" > "$DEFAULT_FILE_PATH"
+fi
+
 if [ "$CERTIFICATES_UPDATED" -eq 1 ]; then
   echo "Certificates updated"
-
-  if [ "$DEFAULT_CERT_ID" = "$TAILSCALE_CERT_ID" ]; then
-    echo "Restarting services"
-    /bin/systemctl restart nginx
-    /bin/systemctl restart pkgctl-WebDAVServer
-    echo "Services restarted"
-  fi
+  restart_services
 else
   echo "Certificates up-to-date"
 fi

@@ -32,7 +32,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-USER_HOME=$(eval echo ~$SUDO_USER)
+USER_HOME=$(eval echo ~"$SUDO_USER")
 TEMPDIR="$USER_HOME/.tailscale_certs"
 TS_DNS=$(/usr/local/bin/tailscale status --json | jq -r '.Self.DNSName | .[:-1]')
 CERT_DIR="/usr/syno/etc/certificate/_archive"
@@ -47,14 +47,15 @@ CERTIFICATES_UPDATED=0
 
 if ! jq -e ". | has(\"$TAILSCALE_CERT_ID\")" "$INFO_FILE_PATH" > /dev/null; then
   echo "Adding Tailscale to $INFO_FILE_PATH"
-  cat "$INFO_FILE_PATH" | jq --arg key "$TAILSCALE_CERT_ID" --argjson services "$(cat $SERVICES_FILE_PATH)" \
-               '. + {$key: {"desc": "Tailscale", "services": $services}}' > "$INFO_FILE_PATH"
+  jq --arg key "$TAILSCALE_CERT_ID" --argjson services "$(cat $SERVICES_FILE_PATH)" "$INFO_FILE_PATH" \
+               '. + {$key: {"desc": "Tailscale", "services": $services}}' > "$INFO_FILE_PATH.tmp" && \
+	       mv "$INFO_FILE_PATH.tmp" "$INFO_FILE_PATH"
 else
   echo "Tailscale already added to $INFO_FILE_PATH"
 fi
 
 mkdir -p "$TEMPDIR"
-trap "rm -rf $TEMPDIR" EXIT
+trap 'rm -rf "$TEMPDIR"' EXIT
 
 echo "Fetching certificates"
 /usr/local/bin/tailscale cert --cert-file "$TEMPDIR/$TS_DNS.crt" --key-file "$TEMPDIR/$TS_DNS.key" "$TS_DNS" > /dev/null

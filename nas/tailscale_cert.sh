@@ -47,9 +47,9 @@ CERTIFICATES_UPDATED=0
 
 if ! jq -e ". | has(\"$TAILSCALE_CERT_ID\")" "$INFO_FILE_PATH" > /dev/null; then
   echo "Adding Tailscale to $INFO_FILE_PATH"
-  jq --arg key "$TAILSCALE_CERT_ID" --argjson services "$(cat $SERVICES_FILE_PATH)" "$INFO_FILE_PATH" \
-               '. + {$key: {"desc": "Tailscale", "services": $services}}' > "$INFO_FILE_PATH.tmp" && \
-	       mv "$INFO_FILE_PATH.tmp" "$INFO_FILE_PATH"
+  jq --arg key "$TAILSCALE_CERT_ID" --argjson services "$(cat $SERVICES_FILE_PATH)" \
+    '. + {($key): {"desc": "Tailscale", "services": $services}}' "$INFO_FILE_PATH" > "$INFO_FILE_PATH.tmp" && \
+  mv "$INFO_FILE_PATH.tmp" "$INFO_FILE_PATH"
 else
   echo "Tailscale already added to $INFO_FILE_PATH"
 fi
